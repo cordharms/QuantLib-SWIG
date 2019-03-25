@@ -424,6 +424,69 @@ class LocalVolSurfacePtr : public boost::shared_ptr<LocalVolTermStructure> {
     }
 };
 
+//FixedLocalVolSurface
+
+%{
+using QuantLib::FixedLocalVolSurface;
+typedef boost::shared_ptr<LocalVolTermStructure> FixedLocalVolSurfacePtr;
+%}
+
+#if defined(SWIGJAVA) || defined(SWIGCSHARP)
+%rename(_FixedLocalVolSurface) FixedLocalVolSurface;
+#else
+%ignore FixedLocalVolSurface;
+#endif
+class FixedLocalVolSurface {
+  public:
+    enum Extrapolation { ConstantExtrapolation,
+                         InterpolatorDefaultExtrapolation };
+#if defined(SWIGJAVA) || defined(SWIGCSHARP)
+  private:
+    FixedLocalVolSurface();
+#endif
+};
+
+
+%rename(FixedLocalVolSurface) FixedLocalVolSurfacePtr;
+class FixedLocalVolSurfacePtr : public boost::shared_ptr<LocalVolTermStructure> {
+  public:
+    %extend {
+        FixedLocalVolSurfacePtr(const Date& referenceDate,
+                             const std::vector<Date>& dates,
+                             const std::vector<Real>& strikes,
+                             const Matrix& localVolMatrix,
+                             const DayCounter& dayCounter,
+                             FixedLocalVolSurface::Extrapolation lowerExtrapolation,
+                             FixedLocalVolSurface::Extrapolation upperExtrapolation) {            
+            return new FixedLocalVolSurfacePtr(
+                new FixedLocalVolSurface(referenceDate,dates,strikes,localVolMatrix,dayCounter,lowerExtrapolation, upperExtrapolation));
+        };
+        static const FixedLocalVolSurface::Extrapolation ConstantExtrapolation = FixedLocalVolSurface::ConstantExtrapolation;
+        static const FixedLocalVolSurface::Extrapolation InterpolatorDefaultExtrapolation = FixedLocalVolSurface::InterpolatorDefaultExtrapolation;
+    }
+};
+
+%{
+using QuantLib::InterpolatedLocalVolSurface;
+typedef boost::shared_ptr<LocalVolTermStructure> InterpolatedLocalVolSurfacePtr;
+%}
+
+//Interpolated local vol surface
+
+%rename(InterpolatedLocalVolSurface) InterpolatedLocalVolSurfacePtr;
+class InterpolatedLocalVolSurfacePtr : public boost::shared_ptr<LocalVolTermStructure> {
+  public:
+    %extend {
+        InterpolatedLocalVolSurfacePtr(const Handle<BlackVolTermStructure>& blackTS,
+            const Handle<YieldTermStructure>& riskFreeTS,
+            const Handle<YieldTermStructure>& dividendTS,
+            const Handle<Quote>& underlying, Size strikeGridAmt,
+            Size timeStepsPerYear) {            
+            return new InterpolatedLocalVolSurfacePtr(
+                new InterpolatedLocalVolSurface(blackTS,riskFreeTS,dividendTS,underlying,strikeGridAmt,timeStepsPerYear));
+        }
+    }
+};
 
 // constant caplet constant term structure
 %{
@@ -1196,6 +1259,78 @@ class NoArbSabrInterpolatedSmileSectionPtr : public boost::shared_ptr<SmileSecti
         EndCriteria::Type endCriteria() const {
             return boost::dynamic_pointer_cast<NoArbSabrInterpolatedSmileSection>(*self)
                 ->endCriteria();
+        }
+    }
+};
+
+//sabr smile section
+%{
+using QuantLib::SabrInterpolatedSmileSection;
+using QuantLib::SmileSection;
+using QuantLib::Actual365Fixed;
+typedef boost::shared_ptr<SmileSection> SabrInterpolatedSmileSectionPtr;
+%}
+
+%rename(SabrInterpolatedSmileSection) SabrInterpolatedSmileSectionPtr;
+class SabrInterpolatedSmileSectionPtr : public boost::shared_ptr<SmileSection> {
+  public:
+    %extend {
+        SabrInterpolatedSmileSectionPtr(
+                           const Date& optionDate,
+                           const Rate& forward,
+                           const std::vector<Rate>& strikes,
+                           bool hasFloatingStrikes,
+                           const Volatility& atmVolatility,
+                           const std::vector<Volatility>& vols,
+                           Real alpha, Real beta, Real nu, Real rho,
+                           bool isAlphaFixed = false, bool isBetaFixed = false,
+                           bool isNuFixed = false, bool isRhoFixed = false,
+                           bool vegaWeighted = true,
+                           const QuantLib::ext::shared_ptr<EndCriteria>& endCriteria
+                            = QuantLib::ext::shared_ptr<EndCriteria>(),
+                           const QuantLib::ext::shared_ptr<OptimizationMethod>& method
+                            = QuantLib::ext::shared_ptr<OptimizationMethod>(),
+                           const DayCounter& dc = Actual365Fixed(),
+                           const Real shift = 0.0,
+                           const bool useNormalVols = false
+                           ) {
+            return new SabrInterpolatedSmileSectionPtr(
+                new SabrInterpolatedSmileSection(optionDate, forward,strikes, hasFloatingStrikes,atmVolatility,vols,alpha,beta,nu,rho,
+                                                isAlphaFixed,isBetaFixed,isNuFixed, isRhoFixed, vegaWeighted,endCriteria,method,dc,shift,useNormalVols));
+        }
+        Volatility volatilityImpl(Rate strike) const {return boost::dynamic_pointer_cast<SabrInterpolatedSmileSection>(*self)->volatilityImpl(strike);};
+        Real alpha() const {return boost::dynamic_pointer_cast<SabrInterpolatedSmileSection>(*self)->alpha();};
+        Real beta() const {return boost::dynamic_pointer_cast<SabrInterpolatedSmileSection>(*self)->beta();};
+        Real nu() const {return boost::dynamic_pointer_cast<SabrInterpolatedSmileSection>(*self)->nu();};
+        Real rho() const {return boost::dynamic_pointer_cast<SabrInterpolatedSmileSection>(*self)->rho();};
+    }
+};
+
+//smiledSurface
+%{
+using QuantLib::SmiledSurface;
+typedef boost::shared_ptr<BlackVolTermStructure> SmiledSurfacePtr;
+%}
+
+namespace std {
+    %template(VectorOfSABRInterpolatedSmileSection) vector<SabrInterpolatedSmileSectionPtr>;
+}
+
+%rename(SmiledSurface) SmiledSurfacePtr;
+class SmiledSurfacePtr : public boost::shared_ptr<BlackVolTermStructure> {
+  public:
+    %extend {
+        SmiledSurfacePtr(const std::vector<SabrInterpolatedSmileSectionPtr>&  smiles,
+                    const Date&                                         referenceDate,
+                    const Calendar&                                     cal = Calendar(),
+                    BusinessDayConvention                               bdc = Following,
+                    const DayCounter&                                   dc = DayCounter()) {
+            std::vector<boost::shared_ptr<SmileSection>> smileList(smiles.size());
+            for(size_t i=0;i<smileList.size();i++){
+                smileList[i] = boost::dynamic_pointer_cast<SmileSection>(smiles[i]);
+            }
+            return new SmiledSurfacePtr(
+                new SmiledSurface(smileList,referenceDate, cal, bdc, dc));
         }
     }
 };

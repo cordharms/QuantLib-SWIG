@@ -238,6 +238,7 @@
 %include swap.i
 %include swaption.i
 %include templatemontecarlo.i
+%include templatemultiassetmodels.i
 %include termstructures.i
 %include timebasket.i
 %include timeseries.i

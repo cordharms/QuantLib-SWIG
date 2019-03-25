@@ -49,8 +49,8 @@ IsObservable(boost::shared_ptr<StochasticProcess>);
 #if defined(SWIGCSHARP)
 SWIG_STD_VECTOR_ENHANCED( boost::shared_ptr<StochasticProcess> )
 #endif
-%template(StochasticProcessVector)
-std::vector<boost::shared_ptr<StochasticProcess> >;
+//%template(StochasticProcessVector)
+//std::vector<boost::shared_ptr<StochasticProcess> >;
 
 
 %{
@@ -118,6 +118,16 @@ class GeneralizedBlackScholesProcessPtr : public StochasticProcess1DPtr {
                        new GeneralizedBlackScholesProcess(s0, dividendTS,
                                                           riskFreeTS, volTS));
       }
+      GeneralizedBlackScholesProcessPtr(
+                             const Handle<Quote>& s0,
+                             const Handle<YieldTermStructure>& dividendTS,
+                             const Handle<YieldTermStructure>& riskFreeTS,
+                             const Handle<BlackVolTermStructure>& volTS,
+                             const Handle<LocalVolTermStructure>& localVolTS) {
+          return new GeneralizedBlackScholesProcessPtr(
+                       new GeneralizedBlackScholesProcess(s0, dividendTS,
+                                                          riskFreeTS, volTS, localVolTS));
+      }
       Handle<Quote> stateVariable() {
           return boost::dynamic_pointer_cast<
                       GeneralizedBlackScholesProcess>(*self)->stateVariable();
@@ -136,6 +146,9 @@ class GeneralizedBlackScholesProcessPtr : public StochasticProcess1DPtr {
       }
     }
 };
+
+%template(GeneralizedBlackScholesProcessVector)
+std::vector<GeneralizedBlackScholesProcessPtr>;
 
 %{
 using QuantLib::BlackScholesProcess;

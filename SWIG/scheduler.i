@@ -98,6 +98,7 @@ class Schedule {
     bool isRegular(Size i) const;
     Schedule until(Date truncationDate) const;
     %extend {
+        const std::vector<Date> dates() const { return self->dates(); }
         #if defined(SWIGPYTHON) || defined(SWIGRUBY)
         Date __getitem__(Integer i) {
             Integer size_ = static_cast<Integer>(self->size());
