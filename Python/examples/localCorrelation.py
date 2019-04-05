@@ -83,8 +83,6 @@ class VolSurface:
         self.interpolatedSurface = LocalVolTermStructureHandle(InterpolatedLocalVolSurface(self.smiledSurface,
             self.yieldCurve, self.divCurve, self.spot,100,100))
         
-        
-input("Press Enter to continue...")        
 
 ########################################################
 # global data
@@ -94,7 +92,7 @@ calendar = TARGET()
 todaysDate = Date(10,October,2017);
 Settings.instance().evaluationDate = todaysDate
 
-useLocalCorr = False
+useLocalCorr = int(input("UserInput 0/1 (0: MultiAsset with const corr, 1: LocalCorr): "))
 
 ########################################################
 # market data
@@ -196,7 +194,7 @@ plt.subplot(2, 1, 1)
 lineMC, = plt.plot(vol1.strikes[strikeRow],implVol,label='MC')
 lineQ, = plt.plot(vol1.strikes[strikeRow],vol1.quotes[strikeRow]*0.01, label='quotes')
 lineSABR, = plt.plot(vol1.strikes[strikeRow],sabrVol, label = 'sabr' )
-plt.ylabel('vol in %')
+plt.ylabel('vol EURUSD in %')
 plt.legend(handles=[lineMC, lineQ, lineSABR])
 
 
@@ -221,9 +219,14 @@ for i in range(0,volCross.strikes.shape[1]):
     implVol.append(get_blackFormulaImpliedStdDev(Option.Call, volCross.strikes[strikeRow][i],1.0,price[i], 1.0,0.0)/frac)
     sabrVol.append(volCross.smiledSurface.blackVol(volCross.matAsDates[strikeRow],volCross.strikes[strikeRow][i],True))
 plt.subplot(2, 1, 2)
-lineMC, = plt.plot(volCross.strikes[strikeRow],implVol,label='MC')
+leg=""
+if useLocalCorr:
+    leg="LocalCorr"
+else:
+    leg = "MultiAsset,Corr const"
+lineMC, = plt.plot(volCross.strikes[strikeRow],implVol,label=leg)
 lineQ, = plt.plot(volCross.strikes[strikeRow],volCross.quotes[strikeRow]*0.01, label='quotes')
 lineSABR, = plt.plot(volCross.strikes[strikeRow],sabrVol, label = 'sabr' )
-plt.ylabel('vol in %')
+plt.ylabel('cross-vol EURGBP in %')
 plt.legend(handles=[lineMC, lineQ, lineSABR])
 plt.show()
